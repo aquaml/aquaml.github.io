@@ -13,16 +13,16 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Source+Sans+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" type="text/css" href="/assets/normalize.css?v=1715837780"
+    <link rel="stylesheet" type="text/css" href="/assets/normalize.css?v=1715838807"
         media="screen" />
-    <link rel="stylesheet" type="text/css" href="/assets/doctave-style.css?v=1715837780"
+    <link rel="stylesheet" type="text/css" href="/assets/doctave-style.css?v=1715838807"
         media="screen" />
-    <link rel="stylesheet" type="text/css" href="/assets/katex.css?v=1715837780" media="screen" />
-    <link rel="stylesheet" type="text/css" href="/assets/prism-ghcolors.css?v=1715837780"
+    <link rel="stylesheet" type="text/css" href="/assets/katex.css?v=1715838807" media="screen" />
+    <link rel="stylesheet" type="text/css" href="/assets/prism-ghcolors.css?v=1715838807"
         media="screen" />
 
     <script>
-        var DOCTAVE_TIMESTAMP = "1715837780";
+        var DOCTAVE_TIMESTAMP = "1715838807";
         var BASE_PATH = "/";
         var color = localStorage.getItem('doctave-color')
 
@@ -76,10 +76,7 @@
             <li><a href="/Installation">Installation</a></li>
             
         
-            <li><a class="active" href="/Quickstart">Quickstart</a></li>
-            
-        
-            <li><a href="/contributing">contributing</a></li>
+            <li><a href="/contributing">Internals</a></li>
             
                 <ul>
     
@@ -88,6 +85,9 @@
     
 </ul>
 
+            
+        
+            <li><a class="active" href="/Quickstart">Quickstart</a></li>
             
         
     </ul>
@@ -161,7 +161,7 @@ Set the <code>use_aqua</code> attribute of the <code>cache_cpu</code> object to 
 <p><strong>Set Up Dynamic Policy with Aqua</strong></p>
 <p>Create a dynamic policy using Aqua's <code>dynamic_policy</code> and set it using the <code>responsive_manager</code> in the same file.
 This policy makes sure that the tensors are moved back to an interconnected GPU if they are migrated to DRAM during high traffic.</p>
-<pre><code class="language-python">dynamic_policy = aqua.dynamic_policy.dynamic_policy('localhost', 8080)
+<pre><code class="language-python">dynamic_policy = aqua.dynamic_policy.dynamic_policy(COORDINATOR_IP, COORDINATOR_PORT)
 aqua.responsive_manager.set_policy(dynamic_policy)
 </code></pre>
 <p>This is to ensure that the tensors are placed on interconnected GPUs.</p>
@@ -266,11 +266,11 @@ selectively turn <code>aqua</code> on and off. You can also implement this assum
             </div>
         </div>
     </div>
-    <script type="text/javascript" src="/assets/katex.js?v=1715837780"></script>
-    <script type="text/javascript" src="/assets/mermaid.js?v=1715837780"></script>
-    <script type="text/javascript" src="/assets/elasticlunr.js?v=1715837780"></script>
-    <script type="text/javascript" src="/assets/prism.js?v=1715837780"></script>
-    <script type="text/javascript" src="/assets/doctave-app.js?v=1715837780"></script>
+    <script type="text/javascript" src="/assets/katex.js?v=1715838807"></script>
+    <script type="text/javascript" src="/assets/mermaid.js?v=1715838807"></script>
+    <script type="text/javascript" src="/assets/elasticlunr.js?v=1715838807"></script>
+    <script type="text/javascript" src="/assets/prism.js?v=1715838807"></script>
+    <script type="text/javascript" src="/assets/doctave-app.js?v=1715838807"></script>
 
     
 </body>

@@ -1,0 +1,227 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>Implementation and contributing</title>
+    <meta name="description" content="Documentation for Aqua">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Source+Sans+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" type="text/css" href="/assets/normalize.css?v=1715837780"
+        media="screen" />
+    <link rel="stylesheet" type="text/css" href="/assets/doctave-style.css?v=1715837780"
+        media="screen" />
+    <link rel="stylesheet" type="text/css" href="/assets/katex.css?v=1715837780" media="screen" />
+    <link rel="stylesheet" type="text/css" href="/assets/prism-ghcolors.css?v=1715837780"
+        media="screen" />
+
+    <script>
+        var DOCTAVE_TIMESTAMP = "1715837780";
+        var BASE_PATH = "/";
+        var color = localStorage.getItem('doctave-color')
+
+        if (color === 'dark') {
+            document.getElementsByTagName('html')[0].classList.remove('light');
+            document.getElementsByTagName('html')[0].classList.add('dark');
+        } else {
+            document.getElementsByTagName('html')[0].classList.remove('dark');
+            document.getElementsByTagName('html')[0].classList.add('light');
+        }
+    </script>
+
+    
+</head>
+
+<body>
+    <label for='menu-toggle-switch' class='menu-toggle-button'>
+        ☰
+    </label>
+    <input type="checkbox" id="menu-toggle-switch" value='0' />
+    <div class='page'>
+        <div class='header'>
+            <div class='logo'>
+                
+                <a href="/">
+                    <img src="/assets/logo.png" alt='Aqua logo'></img>
+                </a>
+                
+                <h2 class='project-name'>
+                    <a href="/">
+                        Aqua
+                    </a>
+                </h2>
+            </div>
+            <div class='search'>
+                <form id='search-form'>
+    <input type='text' id='search-box' autocomplete="off" placeholder="Search..."></input>
+    <span class='search-icon'>S</span>
+    <ul id='search-results'></ul>
+</form>
+
+            </div>
+            <div class='header-dummy-right'>
+            </div>
+        </div>
+        <div class='container'>
+            <div class='sidebar-left'>
+                <nav class='site-nav'>
+    <ul>
+        
+            <li><a href="/Installation">Installation</a></li>
+            
+        
+            <li><a href="/Quickstart">Quickstart</a></li>
+            
+        
+            <li><a href="/contributing">contributing</a></li>
+            
+                <ul>
+    
+        <li><a class="active" href="/contributing/Implementation">Implementation and contributing</a></li>
+        
+    
+</ul>
+
+            
+        
+    </ul>
+    <span id='light-dark-mode-switch'>
+        <svg xmlns="http://www.w3.org/2000/svg" id="dark-mode-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+        </svg>
+
+        <svg xmlns="http://www.w3.org/2000/svg" id="light-mode-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+        </svg>
+    </span>
+</nav>
+
+            </div>
+            <div class='doctave-content'>
+                <h1 id="contributing-to-aqua">Contributing to Aqua</h1>
+<h2 id="overview">Overview</h2>
+<p>This document outlines the implementation details of AQUA across multiple GPUs using PyTorch. It introduces AQUA-LIB, a library designed to handle the migration of tensors without altering the original references, and details the control loops for memory management in both producer and consumer GPUs.</p>
+<h2 id="challenges-with-pytorch">Challenges with PyTorch</h2>
+<p>The need to migrate AQUA TENSORS as workload characteristics change is critical. PyTorch’s limitation in changing a tensor’s physical memory location without modifying tensor references presents a significant challenge to this. AQUA-LIB addresses this by encapsulating PyTorch tensors within a wrapper, allowing for dynamic memory location updates.</p>
+<h2 id="offloading-tensors">Offloading Tensors</h2>
+<p>AQUA-LIB introduces two primary function calls: <code>to_responsive_tensor(torch_tensor)</code> and <code>to_torch_tensor()</code>. These functions manage the tensor’s memory location transparently, providing an updated pointer upon access. The <code>aqua.respond()</code> API ensures safe tensor migration by coordinating read and write operations at the boundaries of inference iterations.</p>
+<h2 id="northbound-interface">Northbound Interface</h2>
+<p>We expose two function calls in AQUA-LIB <code>to_responsive_tensor(torch_tensor)</code> and <code>to_torch_tensor()</code> to allocate tensors in the northbound interface. If a tensor is migrated while a pointer to the previous location of the tensor is in use by the ML model, it can lead to issues similar to segmentation faults. We tackle this problem leveraging the following insight: offloaded tensors are read and written by the ML model only at the boundaries of an inference iteration. We add a simple API, <code>aqua.respond()</code> which the serving engine can invoke before an inference iteration.</p>
+<p>The engine also relies on the northbound interface to offer and reclaim memory in producers. AQUA-LIB is agnostic to the load on the engine and is unable to determine when to offer and reclaim without additional information. AQUA-LIB must make decisions about offering and reclaiming GPU memory using the workload characteristics on the inference serving engine running on the GPU. We implement this by adding a function call <code>inform_stats(...)</code>. The serving engine invokes this with engine level insights at a tunable frequency of inference iterations. The return value of the function is positive when the engine can reclaim memory and negative when the engine needs to offer memory. The implementation of this function varies across engines serving different modalities. For example, LLMs provide the free space in the reserved key-value cache and the number of pending requests to this interface.</p>
+<h2 id="southbound-interface">Southbound Interface</h2>
+<p>The southbound interface offers function calls to access the coordinator's REST API, enabling Aqualib to offer, reclaim memory associated with a GPU, and allocate memory for Aqua tensors.</p>
+<h2 id="control-loops">Control Loops</h2>
+<ul>
+<li>
+<p><strong>Producer Control Loop:</strong> The producer control loop, informed by <code>inform_stats(...)</code>, determines the appropriate action regarding memory allocation. For example, for LLM producers, it considers the rate of pending requests and key-value cache utilization to decide whether to offer or reclaim memory.</p>
+</li>
+<li>
+<p><strong>Consumer Control Loop:</strong> The consumer control loop manages the memory of AQUA TENSORS. It allocates initial memory through <code>to_responsive_tensor(torch_tensor)</code> and retrieves the updated tensor pointer via <code>to_torch_tensor()</code>. The <code>aqua.respond()</code> function is periodically invoked to manage tensor migration, relying on the southbound interface for coordination. The details of the implementation of <code>aqua.respond</code> are presented later in the document.</p>
+</li>
+</ul>
+<h2 id="inference-loop-blocking">Inference Loop Blocking</h2>
+<p>For consumer GPUs, blocking occurs during memory release back to the producer GPU. For producer GPUs, it occurs when offering or reclaiming memory.</p>
+<h2 id="implementing-the-functions">Implementing the functions</h2>
+<p>An informer interface is exposed by the northbound interface to learn about the free memory available on all the GPUs of the interconnect. The informer interface has the function <code>inform_stats(...)</code>. The goal of the informer is to donate the free memory on memory-rich producers to memory-bound consumers. To demonstrate the versatility of the policy framework, we show the ability of AQUA-LIB to work seamlessly with different implementations of informers.</p>
+<h2 id="implementation-of-informers">Implementation of Informers</h2>
+<p>We implemented batch-informer for image, audio models and llm-informer for LLMs. We know that an LLM can be memory-rich (producer) when the traffic is low and memory-bound when the traffic is high. Thus, the llm-informer’s <code>inform_stats(...)</code> implementation has two main functions, donating memory when the traffic is low and reclaiming memory when the traffic is high. The main problem is to identify when to donate and when to reclaim. We leveraged the number of requests that are in the wait queue to solve this problem. The llm engine calls the northbound interface’s <code>inform_stats(...)</code> every few iterations with this metric. We calculate the request rate using this during a time window. If the rate is below a threshold, the LLM has low traffic, so we retain only 5GB of memory for the inference context to stay responsive and donate the remaining using the <code>/lease</code> endpoint. If the rate is over a threshold, then the queue is building up due to high traffic and we reclaim the donated memory. Before reclaiming, the memory occupied by consumer’s AQUA TENSORS needs to be released. The informer uses the <code>/reclaim_request</code> to signal the coordinator that the consumers that have tensors on this GPU need to release them. The coordinator replies to the corresponding consumer’s <code>/respond</code> request with this signal. The informer checks the status of the reclaim request using <code>/reclaim_status</code> during the next invocation of <code>inform_stats(...)</code>.</p>
+<h2 id="informer-for-image-and-audio-models">Informer for image and audio models</h2>
+<p>We integrate the batch-informer with the image and audio generative model serving engines. These engines serve requests as they arrive without waiting to batch them to minimize the latency. So, we pick a maximum batch size and call the informer after inferring on a batch of prompts of this size. </p>
+<h2 id="aqua-lib-tensor-allocation-policies">AQUA-LIB Tensor Allocation Policies</h2>
+<p>The consumer control loop interface has three functions: <code>allocate_aqua_tensor(AQUA_tensor)</code>, <code>get_tensors_to_move()</code>, and <code>done_moving_tensors()</code>. The first function is called to decide the location of a newly allocated tensor. The second function is called at the boundary of an iteration within <code>aqua.respond()</code> to determine changes to AQUA TENSORS location. AQUA-LIB uses the last function to inform the policy about the completion of data movement.</p>
+<h2 id="policy-for-tensor-migration">Policy for Tensor migration</h2>
+<p>The goal of the policy is to store the offloaded tensors of consumers on an interconnected GPU whenever possible. The policy communicates with the coordinator to opportunistically place tensors to achieve this goal. The implementation of <code>allocate_aqua_tensor(AQUA_tensor)</code> interacts with the coordinator over the <code>/allocate</code> endpoint to determine the location of a new AQUA TENSORS, the endpoint responds with the location for the tensor which is an interconnected GPU or the DRAM. <code>get_tensors_to_move()</code> uses the <code>/respond</code> endpoint to determine changes to locations and finally <code>done_moving_tensors()</code> uses <code>/free</code> to inform the coordinator that the tensor has been moved to the new destination. The <code>get_tensors_to_move()</code> also selectively invokes the <code>/allocate</code> endpoint when a tensor is allocated on</p>
+
+            </div>
+            <div class='sidebar-right'>
+                <div class='page-nav' id='page-nav'>
+                    <p class='page-nav-header'>On this page</p>
+                    <ul>
+                        
+                        <li class='page-nav-level-1'>
+                            <a href='#contributing-to-aqua'>Contributing to Aqua</a>
+                        </li>
+                        
+                        <li class='page-nav-level-2'>
+                            <a href='#overview'>Overview</a>
+                        </li>
+                        
+                        <li class='page-nav-level-2'>
+                            <a href='#challenges-with-pytorch'>Challenges with PyTorch</a>
+                        </li>
+                        
+                        <li class='page-nav-level-2'>
+                            <a href='#offloading-tensors'>Offloading Tensors</a>
+                        </li>
+                        
+                        <li class='page-nav-level-2'>
+                            <a href='#northbound-interface'>Northbound Interface</a>
+                        </li>
+                        
+                        <li class='page-nav-level-2'>
+                            <a href='#southbound-interface'>Southbound Interface</a>
+                        </li>
+                        
+                        <li class='page-nav-level-2'>
+                            <a href='#control-loops'>Control Loops</a>
+                        </li>
+                        
+                        <li class='page-nav-level-2'>
+                            <a href='#inference-loop-blocking'>Inference Loop Blocking</a>
+                        </li>
+                        
+                        <li class='page-nav-level-2'>
+                            <a href='#implementing-the-functions'>Implementing the functions</a>
+                        </li>
+                        
+                        <li class='page-nav-level-2'>
+                            <a href='#implementation-of-informers'>Implementation of Informers</a>
+                        </li>
+                        
+                        <li class='page-nav-level-2'>
+                            <a href='#informer-for-image-and-audio-models'>Informer for image and audio models</a>
+                        </li>
+                        
+                        <li class='page-nav-level-2'>
+                            <a href='#aqua-lib-tensor-allocation-policies'>AQUA-LIB Tensor Allocation Policies</a>
+                        </li>
+                        
+                        <li class='page-nav-level-2'>
+                            <a href='#policy-for-tensor-migration'>Policy for Tensor migration</a>
+                        </li>
+                        
+                    </ul>
+                </div>
+            </div>
+            <div class='wave-container'>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+                    <path fill-opacity="0.35"
+                        d="M0,192L60,213.3C120,235,240,277,360,277.3C480,277,600,235,720,192C840,149,960,107,1080,122.7C1200,139,1320,213,1380,250.7L1440,288L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z">
+                    </path>
+                    <path fill-opacity="0.5"
+                        d="M0,160L60,181.3C120,203,240,245,360,229.3C480,213,600,139,720,138.7C840,139,960,213,1080,229.3C1200,245,1320,203,1380,181.3L1440,160L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z">
+                    </path>
+                    <path fill-opacity="0.2"
+                        d="M0,224L60,197.3C120,171,240,117,360,117.3C480,117,600,171,720,186.7C840,203,960,181,1080,186.7C1200,192,1320,224,1380,240L1440,256L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z">
+                    </path>
+                </svg>
+                <p>Powered by <a href='https://cli.doctave.com' target='_blank'>Doctave</a></p>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="/assets/katex.js?v=1715837780"></script>
+    <script type="text/javascript" src="/assets/mermaid.js?v=1715837780"></script>
+    <script type="text/javascript" src="/assets/elasticlunr.js?v=1715837780"></script>
+    <script type="text/javascript" src="/assets/prism.js?v=1715837780"></script>
+    <script type="text/javascript" src="/assets/doctave-app.js?v=1715837780"></script>
+
+    
+</body>
+
+</html>

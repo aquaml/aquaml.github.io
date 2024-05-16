@@ -1,0 +1,278 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>Quickstart</title>
+    <meta name="description" content="Documentation for Aqua">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Source+Sans+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" type="text/css" href="/assets/normalize.css?v=1715837780"
+        media="screen" />
+    <link rel="stylesheet" type="text/css" href="/assets/doctave-style.css?v=1715837780"
+        media="screen" />
+    <link rel="stylesheet" type="text/css" href="/assets/katex.css?v=1715837780" media="screen" />
+    <link rel="stylesheet" type="text/css" href="/assets/prism-ghcolors.css?v=1715837780"
+        media="screen" />
+
+    <script>
+        var DOCTAVE_TIMESTAMP = "1715837780";
+        var BASE_PATH = "/";
+        var color = localStorage.getItem('doctave-color')
+
+        if (color === 'dark') {
+            document.getElementsByTagName('html')[0].classList.remove('light');
+            document.getElementsByTagName('html')[0].classList.add('dark');
+        } else {
+            document.getElementsByTagName('html')[0].classList.remove('dark');
+            document.getElementsByTagName('html')[0].classList.add('light');
+        }
+    </script>
+
+    
+</head>
+
+<body>
+    <label for='menu-toggle-switch' class='menu-toggle-button'>
+        ☰
+    </label>
+    <input type="checkbox" id="menu-toggle-switch" value='0' />
+    <div class='page'>
+        <div class='header'>
+            <div class='logo'>
+                
+                <a href="/">
+                    <img src="/assets/logo.png" alt='Aqua logo'></img>
+                </a>
+                
+                <h2 class='project-name'>
+                    <a href="/">
+                        Aqua
+                    </a>
+                </h2>
+            </div>
+            <div class='search'>
+                <form id='search-form'>
+    <input type='text' id='search-box' autocomplete="off" placeholder="Search..."></input>
+    <span class='search-icon'>S</span>
+    <ul id='search-results'></ul>
+</form>
+
+            </div>
+            <div class='header-dummy-right'>
+            </div>
+        </div>
+        <div class='container'>
+            <div class='sidebar-left'>
+                <nav class='site-nav'>
+    <ul>
+        
+            <li><a href="/Installation">Installation</a></li>
+            
+        
+            <li><a class="active" href="/Quickstart">Quickstart</a></li>
+            
+        
+            <li><a href="/contributing">contributing</a></li>
+            
+                <ul>
+    
+        <li><a href="/contributing/Implementation">Implementation and contributing</a></li>
+        
+    
+</ul>
+
+            
+        
+    </ul>
+    <span id='light-dark-mode-switch'>
+        <svg xmlns="http://www.w3.org/2000/svg" id="dark-mode-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+        </svg>
+
+        <svg xmlns="http://www.w3.org/2000/svg" id="light-mode-icon" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+        </svg>
+    </span>
+</nav>
+
+            </div>
+            <div class='doctave-content'>
+                <h1 id="integrating-aqua-with-generative-models">Integrating Aqua with Generative models</h1>
+<p>The goal of including <code>Aqua</code> in your workflow is to accelerate memory constrained LLM serving.
+In this tutorial, we will learn how to integrate <code>aqua</code> with the popular Diffusers image generative engine to use the surplus memory on these GPUs.</p>
+<p>We will also learn in this tutorial how to consume the surplus memory on a memory constrained LLM serving engine such as FlexGen. </p>
+<h3 id="what-about-other-serving-engines?">What about other serving engines?</h3>
+<p>Aqua can seamlessly integrate with other serving engines. We have tutorials that show how to use Aqua in <strong>vLLM</strong> for fair scheduling and storing lora-adapters.</p>
+<h2 id="integrating-aqua-with-diffusers">Integrating Aqua with Diffusers</h2>
+<p>To integrate the <code>aqua</code> library with diffusers, follow these steps:</p>
+<ol>
+<li>
+<p><strong>Import the Aqua Library</strong></p>
+<p>Ensure you have the <code>aqua</code> library imported at the beginning of your script.</p>
+<pre><code class="language-python">import aqua
+</code></pre>
+</li>
+<li>
+<p><strong>Initialize the Aqua Static Informer</strong></p>
+<p>Before starting your main inference loop, initialize the Aqua static informer.</p>
+<pre><code class="language-python">mmc = aqua.static.static_informer(COORDINATOR_IP, 
+                             COORDINATOR_PORT, 0)
+</code></pre>
+</li>
+<li>
+<p><strong>Define a function to call Aqua</strong></p>
+<p><code>torch_memory()</code> calculates free memory on the GPU and calls the informer.</p>
+<pre><code class="language-python">def torch_memory():
+     free_memory, _ = torch.cuda.mem_get_info()
+     mmc.offer_memory(free_memory)
+</code></pre>
+</li>
+<li>
+<p><strong>Call the <code>torch_memory</code> Function</strong></p>
+<p>Call the function within your main inference script after inferring on the first batch of prompts.
+For example:</p>
+<pre><code class="language-python"> images = pipeline(prompts_max_batch_size, generator=generator).images
+ torch_memory()
+ # Run the regular inference loop
+ while requests.exist():
+     images = pipeline(requests.get_prompts(batch_size), generator=generator).images
+</code></pre>
+</li>
+</ol>
+<h2 id="integrating-aqua-with-flexgen">Integrating Aqua with FlexGen</h2>
+<p>Flexgen enables inference of long prompts that exceed the GPU memory after loading the model. This tutorial explains how to integrate the <code>aqua</code> library with FlexGen. </p>
+<h2 id="steps-for-integration">Steps for Integration</h2>
+<p>Import <code>aqua</code> in <code>flex_opt.py</code> and <code>pytorch_backend.py</code>. </p>
+<ol>
+<li>
+<p><strong>Edit the <code>run_flexgen</code> function in <code>flex_opt.py</code> to add <code>aqua</code>.</strong>
+Set the <code>use_aqua</code> attribute of the <code>cache_cpu</code> object to <code>True</code>.</p>
+<pre><code class="language-python">cache_cpu.use_aqua = True
+</code></pre>
+</li>
+<li>
+<p><strong>Set Up Dynamic Policy with Aqua</strong></p>
+<p>Create a dynamic policy using Aqua's <code>dynamic_policy</code> and set it using the <code>responsive_manager</code> in the same file.
+This policy makes sure that the tensors are moved back to an interconnected GPU if they are migrated to DRAM during high traffic.</p>
+<pre><code class="language-python">dynamic_policy = aqua.dynamic_policy.dynamic_policy('localhost', 8080)
+aqua.responsive_manager.set_policy(dynamic_policy)
+</code></pre>
+<p>This is to ensure that the tensors are placed on interconnected GPUs.</p>
+</li>
+<li>
+<p><strong>Respond to migration requests</strong></p>
+<p>Call <code>aqua.respond</code> in <code>sync</code> function of FlexGen in the same file. <code>sync</code> is already called by Flexgen to synchronize cuda streams to ensure that the required data is loaded on the GPU before proceeding with the inference iteration.</p>
+<pre><code class="language-python">def sync(self):
+   self.env.disk.synchronize()
+   torch.cuda.synchronize()
+   aqua.responsive_manager.respond()
+</code></pre>
+</li>
+<li>
+<p><strong>Allocating Aqua tensors</strong></p>
+<p>We should modify the <code>pytorch_backend.py</code> file since it allocates and manages tensors on DRAM to offload key-value cache of prompts that do not fit on the GPU.</p>
+<p>Within the <code>TorchDevice</code> class, modify the <code>allocate</code> function to allocate Aqua tensors instead of PyTorch tensors.</p>
+<pre><code class="language-python">def allocate(self, shape, dtype, pin_memory=None, name=None):
+     if self.device_type == DeviceType.CPU:
+         pin_memory = True if pin_memory is None else pin_memory
+     else:
+         pin_memory = False
+     dtype = np_dtype_to_torch_dtype[dtype]
+     data = torch.empty(shape, dtype=dtype, pin_memory=pin_memory, device=self.dev)
+     
+     if self.use_aqua:
+         torch_data = data
+         data = aqua.responsive_manager.to_responsive_tensor(torch_data)
+         rt = TorchTensor.create_from_aqua(torch_data.shape, torch_data.dtype, data, self, name=name)
+         del torch_data
+         return rt
+     
+     return TorchTensor.create_from_torch(data, self, name=name, is_aqua_tensor=self.use_aqua)
+</code></pre>
+<p>Modify the <code>TorchTensor</code> class to add this new function and add an attribute called <code>is_aqua_tensor</code>. We are adding this boolean to 
+selectively turn <code>aqua</code> on and off. You can also implement this assuming you always want to use <code>aqua</code> on all the offloaded tensors and skip to the next step.</p>
+<pre><code class="language-python">def __init__(self, shape, dtype, data, device, name=None, is_aqua_tensor=False):
+   if isinstance(data, torch.Tensor):
+      assert data.device == device.dev
+   ......
+   self.name = name or TorchTensor.next_name()
+   self.is_aqua_tensor = is_aqua_tensor
+</code></pre>
+<pre><code class="language-python">@classmethod
+ def create_from_aqua(cls, shape, dtype, data, device, name=None):
+     return cls(shape, dtype, data, device, name=name, is_aqua_tensor=True)
+</code></pre>
+<p>Finally, when the tensor is accessed to copy the data, we should call <code>to_torch_tensor</code> to return the right pointer. Modify the <code>general_copy</code> function's last <code>else</code> block.</p>
+<pre><code class="language-python">   else:
+      # The normal path
+      src_data = src.data.to_torch_tensor() if src.is_aqua_tensor else src.data
+      dst_data = dst.data.to_torch_tensor() if dst.is_aqua_tensor else dst.data
+      src = src_data[src_indices] if src_indices else src_data
+      dst = dst_data[dst_indices] if dst_indices else dst_data
+      dst.copy_(src, non_blocking=True)
+</code></pre>
+</li>
+</ol>
+
+            </div>
+            <div class='sidebar-right'>
+                <div class='page-nav' id='page-nav'>
+                    <p class='page-nav-header'>On this page</p>
+                    <ul>
+                        
+                        <li class='page-nav-level-1'>
+                            <a href='#integrating-aqua-with-generative-models'>Integrating Aqua with Generative models</a>
+                        </li>
+                        
+                        <li class='page-nav-level-3'>
+                            <a href='#what-about-other-serving-engines?'>What about other serving engines?</a>
+                        </li>
+                        
+                        <li class='page-nav-level-2'>
+                            <a href='#integrating-aqua-with-diffusers'>Integrating Aqua with Diffusers</a>
+                        </li>
+                        
+                        <li class='page-nav-level-2'>
+                            <a href='#integrating-aqua-with-flexgen'>Integrating Aqua with FlexGen</a>
+                        </li>
+                        
+                        <li class='page-nav-level-2'>
+                            <a href='#steps-for-integration'>Steps for Integration</a>
+                        </li>
+                        
+                    </ul>
+                </div>
+            </div>
+            <div class='wave-container'>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+                    <path fill-opacity="0.35"
+                        d="M0,192L60,213.3C120,235,240,277,360,277.3C480,277,600,235,720,192C840,149,960,107,1080,122.7C1200,139,1320,213,1380,250.7L1440,288L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z">
+                    </path>
+                    <path fill-opacity="0.5"
+                        d="M0,160L60,181.3C120,203,240,245,360,229.3C480,213,600,139,720,138.7C840,139,960,213,1080,229.3C1200,245,1320,203,1380,181.3L1440,160L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z">
+                    </path>
+                    <path fill-opacity="0.2"
+                        d="M0,224L60,197.3C120,171,240,117,360,117.3C480,117,600,171,720,186.7C840,203,960,181,1080,186.7C1200,192,1320,224,1380,240L1440,256L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z">
+                    </path>
+                </svg>
+                <p>Powered by <a href='https://cli.doctave.com' target='_blank'>Doctave</a></p>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="/assets/katex.js?v=1715837780"></script>
+    <script type="text/javascript" src="/assets/mermaid.js?v=1715837780"></script>
+    <script type="text/javascript" src="/assets/elasticlunr.js?v=1715837780"></script>
+    <script type="text/javascript" src="/assets/prism.js?v=1715837780"></script>
+    <script type="text/javascript" src="/assets/doctave-app.js?v=1715837780"></script>
+
+    
+</body>
+
+</html>

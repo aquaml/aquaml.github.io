@@ -5,7 +5,7 @@
 <head>
     <meta charset="utf-8">
 
-    <title>Aqua</title>
+    <title>Installation</title>
     <meta name="description" content="Documentation for Aqua">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -73,7 +73,7 @@
                 <nav class='site-nav'>
     <ul>
         
-            <li><a href="/Installation">Installation</a></li>
+            <li><a class="active" href="/Installation">Installation</a></li>
             
         
             <li><a href="/Quickstart">Quickstart</a></li>
@@ -104,10 +104,50 @@
 
             </div>
             <div class='doctave-content'>
-                <h1 id="aqua's-documentation">Aqua's documentation</h1>
-<p>Aqua is a transparent and elastic GPU memory management framework for responsive LLM inference.
-Aqua improves the responsiveness of LLM inference by 4X compared to the state-of-the-art and it improves LLM inference throughput over a single long prompt by 6X.</p>
-<p><img src="http://localhost:4001/assets/aqua.png" alt="Aqua tensor"></p>
+                <h1 id="integrating-aqualib">Integrating Aqualib</h1>
+<p>Aqualib is a Python module designed to implement responsive offloaded tensors in PyTorch for efficient management of distributed GPU memory.</p>
+<h2 id="installation">Installation</h2>
+<p>To install Aqua, first clone the repository:</p>
+<pre><code class="language-bash">git clone https://github.com/aquaml/aqua
+</code></pre>
+<p>Next, activate your conda environment (e.g., <code>mygenai</code>) and navigate to the Aqua directory:</p>
+<pre><code class="language-bash">conda activate mygenai
+cd aqua
+</code></pre>
+<p>Finally, install Aqua using pip:</p>
+<pre><code class="language-bash">python3 -m pip install -e .
+</code></pre>
+<h2 id="usage">Usage</h2>
+<ol>
+<li><strong>Importing Aqua</strong></li>
+</ol>
+<p>To use Aqua, import it into your Python code:</p>
+<pre><code class="language-Python">import aqua
+</code></pre>
+<ol start="2">
+<li><strong>Creating a Responsive Tensor</strong></li>
+</ol>
+<p>To convert a PyTorch tensor (<code>t</code>) into a responsive tensor (<code>rt</code>), use the following:</p>
+<pre><code class="language-Python">rt = aqua.responsive_manager.to_responsive_tensor(t)
+</code></pre>
+<ol start="3">
+<li><strong>Converting Back to PyTorch Tensor</strong></li>
+</ol>
+<p>To retrieve the original PyTorch tensor from a responsive tensor, call the following method:</p>
+<pre><code class="language-Python">torch_tensor = rt.to_torch_tensor()
+</code></pre>
+<ol start="4">
+<li><strong>Responsiveness in Aqua</strong></li>
+</ol>
+<p>At the boundary of every inference loop, ensure responsiveness is activated. For example, if you are using vLLM,
+you can call the respond method before calling the scheduler in the engine class.</p>
+<pre><code class="language-Python">aqua.responsive_manager.respond()
+scheduler_outputs = self.scheduler.schedule()
+</code></pre>
+<ol start="5">
+<li><strong>Custom Policies</strong></li>
+</ol>
+<p>You can create custom policies for responsive tensor management by extending the abstract class <code>aqua_policy</code> in <code>policies/aqua_policy.py</code>.</p>
 
             </div>
             <div class='sidebar-right'>
@@ -116,7 +156,15 @@ Aqua improves the responsiveness of LLM inference by 4X compared to the state-of
                     <ul>
                         
                         <li class='page-nav-level-1'>
-                            <a href='#aqua&#x27;s-documentation'>Aqua&#x27;s documentation</a>
+                            <a href='#integrating-aqualib'>Integrating Aqualib</a>
+                        </li>
+                        
+                        <li class='page-nav-level-2'>
+                            <a href='#installation'>Installation</a>
+                        </li>
+                        
+                        <li class='page-nav-level-2'>
+                            <a href='#usage'>Usage</a>
                         </li>
                         
                     </ul>

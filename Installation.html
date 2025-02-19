@@ -13,16 +13,16 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Source+Sans+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" type="text/css" href="/assets/normalize.css?v=1715838807"
+    <link rel="stylesheet" type="text/css" href="/assets/normalize.css?v=1739940517"
         media="screen" />
-    <link rel="stylesheet" type="text/css" href="/assets/doctave-style.css?v=1715838807"
+    <link rel="stylesheet" type="text/css" href="/assets/doctave-style.css?v=1739940517"
         media="screen" />
-    <link rel="stylesheet" type="text/css" href="/assets/katex.css?v=1715838807" media="screen" />
-    <link rel="stylesheet" type="text/css" href="/assets/prism-ghcolors.css?v=1715838807"
+    <link rel="stylesheet" type="text/css" href="/assets/katex.css?v=1739940517" media="screen" />
+    <link rel="stylesheet" type="text/css" href="/assets/prism-ghcolors.css?v=1739940517"
         media="screen" />
 
     <script>
-        var DOCTAVE_TIMESTAMP = "1715838807";
+        var DOCTAVE_TIMESTAMP = "1739940517";
         var BASE_PATH = "/";
         var color = localStorage.getItem('doctave-color')
 
@@ -76,20 +76,6 @@
             <li><a class="active" href="/Installation">Installation</a></li>
             
         
-            <li><a href="/contributing">Internals</a></li>
-            
-                <ul>
-    
-        <li><a href="/contributing/Implementation">Implementation and contributing</a></li>
-        
-    
-</ul>
-
-            
-        
-            <li><a href="/Quickstart">Quickstart</a></li>
-            
-        
     </ul>
     <span id='light-dark-mode-switch'>
         <svg xmlns="http://www.w3.org/2000/svg" id="dark-mode-icon" viewBox="0 0 20 20" fill="currentColor">
@@ -105,49 +91,8 @@
             </div>
             <div class='doctave-content'>
                 <h1 id="integrating-aqualib">Integrating Aqualib</h1>
-<p>Aqualib is a Python module designed to implement responsive offloaded tensors in PyTorch for efficient management of distributed GPU memory.</p>
-<h2 id="installation">Installation</h2>
-<p>To install Aqua, first clone the repository:</p>
-<pre><code class="language-bash">git clone https://github.com/aquaml/aqua
-</code></pre>
-<p>Next, activate your conda environment (e.g., <code>mygenai</code>) and navigate to the Aqua directory:</p>
-<pre><code class="language-bash">conda activate mygenai
-cd aqua
-</code></pre>
-<p>Finally, install Aqua using pip:</p>
-<pre><code class="language-bash">python3 -m pip install -e .
-</code></pre>
-<h2 id="usage">Usage</h2>
-<ol>
-<li><strong>Importing Aqua</strong></li>
-</ol>
-<p>To use Aqua, import it into your Python code:</p>
-<pre><code class="language-Python">import aqua
-</code></pre>
-<ol start="2">
-<li><strong>Creating a Responsive Tensor</strong></li>
-</ol>
-<p>To convert a PyTorch tensor (<code>t</code>) into a responsive tensor (<code>rt</code>), use the following:</p>
-<pre><code class="language-Python">rt = aqua.responsive_manager.to_responsive_tensor(t)
-</code></pre>
-<ol start="3">
-<li><strong>Converting Back to PyTorch Tensor</strong></li>
-</ol>
-<p>To retrieve the original PyTorch tensor from a responsive tensor, call the following method:</p>
-<pre><code class="language-Python">torch_tensor = rt.to_torch_tensor()
-</code></pre>
-<ol start="4">
-<li><strong>Responsiveness in Aqua</strong></li>
-</ol>
-<p>At the boundary of every inference loop, ensure responsiveness is activated. For example, if you are using vLLM,
-you can call the respond method before calling the scheduler in the engine class.</p>
-<pre><code class="language-Python">aqua.responsive_manager.respond()
-scheduler_outputs = self.scheduler.schedule()
-</code></pre>
-<ol start="5">
-<li><strong>Custom Policies</strong></li>
-</ol>
-<p>You can create custom policies for responsive tensor management by extending the abstract class <code>aqua_policy</code> in <code>policies/aqua_policy.py</code>.</p>
+
+<p>Site building</p>
 
             </div>
             <div class='sidebar-right'>
@@ -157,14 +102,6 @@ scheduler_outputs = self.scheduler.schedule()
                         
                         <li class='page-nav-level-1'>
                             <a href='#integrating-aqualib'>Integrating Aqualib</a>
-                        </li>
-                        
-                        <li class='page-nav-level-2'>
-                            <a href='#installation'>Installation</a>
-                        </li>
-                        
-                        <li class='page-nav-level-2'>
-                            <a href='#usage'>Usage</a>
                         </li>
                         
                     </ul>
@@ -186,12 +123,32 @@ scheduler_outputs = self.scheduler.schedule()
             </div>
         </div>
     </div>
-    <script type="text/javascript" src="/assets/katex.js?v=1715838807"></script>
-    <script type="text/javascript" src="/assets/mermaid.js?v=1715838807"></script>
-    <script type="text/javascript" src="/assets/elasticlunr.js?v=1715838807"></script>
-    <script type="text/javascript" src="/assets/prism.js?v=1715838807"></script>
-    <script type="text/javascript" src="/assets/doctave-app.js?v=1715838807"></script>
+    <script type="text/javascript" src="/assets/katex.js?v=1739940517"></script>
+    <script type="text/javascript" src="/assets/mermaid.js?v=1739940517"></script>
+    <script type="text/javascript" src="/assets/elasticlunr.js?v=1739940517"></script>
+    <script type="text/javascript" src="/assets/prism.js?v=1739940517"></script>
+    <script type="text/javascript" src="/assets/doctave-app.js?v=1739940517"></script>
 
+    
+    <script type='text/javascript' src="/assets/livereload.js?port=35729" async="" defer=""></script>
+
+    <script>
+        // Don't reset scrolling on livereload
+        window.addEventListener('scroll', function () {
+            localStorage.setItem('doctave-scrollPosition', window.scrollY);
+
+            dragRightMenu();
+        }, false);
+
+        window.addEventListener('load', function () {
+            if (localStorage.getItem('doctave-scrollPosition') !== null)
+                window.scrollTo(0, localStorage.getItem('doctave-scrollPosition'));
+
+            document.getElementById('menu-toggle-switch').addEventListener('change', function (e) {
+                disableScrollifMenuOpen();
+            });
+        }, false);
+    </script>
     
 </body>
 

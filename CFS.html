@@ -5,7 +5,7 @@
 <head>
     <meta charset="utf-8">
 
-    <title>Aqua</title>
+    <title>CFS</title>
     <meta name="description" content="Documentation for Aqua">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -79,7 +79,7 @@
             <li><a href="/Experiments">Experiments</a></li>
             
         
-            <li><a href="/CFS">CFS</a></li>
+            <li><a class="active" href="/CFS">CFS</a></li>
             
         
     </ul>
@@ -96,10 +96,24 @@
 
             </div>
             <div class='doctave-content'>
-                <h1 id="aqua's-documentation">Aqua's documentation</h1>
-<p>Aqua improves responsiveness of LLM serving engines like vLLM during bursts in traffic rates. Such bursts are usually handled by autoscaling the number of replicas serving the LLM and redirecting the additional traffic to these replicas. Autoscaling takes a few minutes since spinning up new VMs or containers takes several minutes. During this period all the users of the prompts in the burst experience an empty screen with no response! Aqua addresses this problem by designing and implementing the first Completely Fair Scheduler which efficiently time-shares the GPUs serving the LLM across all the prompts so that every user experiences a responsive service.</p>
-<p>Preemption is a fundamental mechanism required to implement CFS and Aqua implements fast preemption by identifying unused GPU HBM within a scale-up domain like the NvLink fabric and using it as the preemption location reducing the preemption overheads by more than 5x! For more details, please refer to our paper here - <a href="https://dl.acm.org/doi/abs/10.1145/3676641.3715983">Paper</a></p>
-<p><img src="/assets/aqua.png" alt="Aqua tensor"></p>
+                <h1 id="getting-vllm-with-cfs">Getting vLLM with CFS</h1>
+<p>Aqua provides a full implementation of CFS in the vLLM's core scheduler. You can install this version of vLLM by following the instructions in <a href="https://github.com/aquaml/vllm">https://github.com/aquaml/vllm</a>.</p>
+<p>You can either execute vLLM with just Aqua's CFS or also include the fast preemption enabled by Aqua-lib. Follow the instructions below to do the former and visit <a href="/Experiments">experiments</a> to do the latter. The <code>--enable-cfs</code> flag toggles the scheduler behavior in vLLM to use CFS. Note that you need to adjust the swap-space based on the size of the burst you need to absorb.</p>
+<pre><code class="language-bash">CUDA_VISIBLE_DEVICES=0 python3 -m vllm.entrypoints.openai.api_server \
+  --model meta-llama/Llama-3.1-8B-Instruct \
+  --tensor-parallel-size 1 \
+  --swap-space 20 \
+  --disable-log-requests \
+  --enforce-eager \
+  --enable-chunked-prefill \
+  --max-num-batched-tokens 512 \
+  --max-num-seqs 512 \
+  --disable-sliding-window \
+  --load-format dummy \
+  --gpu-memory-utilization 0.9 \
+  --max-model-len 4096 \
+  --enable-cfs
+</code></pre>
 
             </div>
             <div class='sidebar-right'>
@@ -108,7 +122,7 @@
                     <ul>
                         
                         <li class='page-nav-level-1'>
-                            <a href='#aqua&#x27;s-documentation'>Aqua&#x27;s documentation</a>
+                            <a href='#getting-vllm-with-cfs'>Getting vLLM with CFS</a>
                         </li>
                         
                     </ul>

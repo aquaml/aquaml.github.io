@@ -5,7 +5,7 @@
 <head>
     <meta charset="utf-8">
 
-    <title>Aqua</title>
+    <title>Experiments</title>
     <meta name="description" content="Documentation for Aqua">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -76,7 +76,7 @@
             <li><a href="/Installation">Installation</a></li>
             
         
-            <li><a href="/Experiments">Experiments</a></li>
+            <li><a class="active" href="/Experiments">Experiments</a></li>
             
         
             <li><a href="/CFS">CFS</a></li>
@@ -96,20 +96,12 @@
 
             </div>
             <div class='doctave-content'>
-                <h1 id="aqua's-documentation">Aqua's documentation</h1>
-<p>Aqua improves responsiveness of LLM serving engines like vLLM during bursts in traffic rates. Such bursts are usually handled by autoscaling the number of replicas serving the LLM and redirecting the additional traffic to these replicas. Autoscaling takes a few minutes since spinning up new VMs or containers takes several minutes. During this period all the users of the prompts in the burst experience an empty screen with no response! Aqua addresses this problem by designing and implementing the first Completely Fair Scheduler which efficiently time-shares the GPUs serving the LLM across all the prompts so that every user experiences a responsive service.</p>
-<p>Preemption is a fundamental mechanism required to implement CFS and Aqua implements fast preemption by identifying unused GPU HBM within a scale-up domain like the NvLink fabric and using it as the preemption location reducing the preemption overheads by more than 5x! For more details, please refer to our paper here - <a href="https://dl.acm.org/doi/abs/10.1145/3676641.3715983">Paper</a></p>
-<p><img src="/assets/aqua.png" alt="Aqua tensor"></p>
-
+                
             </div>
             <div class='sidebar-right'>
                 <div class='page-nav' id='page-nav'>
                     <p class='page-nav-header'>On this page</p>
                     <ul>
-                        
-                        <li class='page-nav-level-1'>
-                            <a href='#aqua&#x27;s-documentation'>Aqua&#x27;s documentation</a>
-                        </li>
                         
                     </ul>
                 </div>

@@ -13,16 +13,16 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Source+Sans+Pro:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap"
         rel="stylesheet">
 
-    <link rel="stylesheet" type="text/css" href="/assets/normalize.css?v=1749249849"
+    <link rel="stylesheet" type="text/css" href="/assets/normalize.css?v=1749277552"
         media="screen" />
-    <link rel="stylesheet" type="text/css" href="/assets/doctave-style.css?v=1749249849"
+    <link rel="stylesheet" type="text/css" href="/assets/doctave-style.css?v=1749277552"
         media="screen" />
-    <link rel="stylesheet" type="text/css" href="/assets/katex.css?v=1749249849" media="screen" />
-    <link rel="stylesheet" type="text/css" href="/assets/prism-ghcolors.css?v=1749249849"
+    <link rel="stylesheet" type="text/css" href="/assets/katex.css?v=1749277552" media="screen" />
+    <link rel="stylesheet" type="text/css" href="/assets/prism-ghcolors.css?v=1749277552"
         media="screen" />
 
     <script>
-        var DOCTAVE_TIMESTAMP = "1749249849";
+        var DOCTAVE_TIMESTAMP = "1749277552";
         var BASE_PATH = "/";
         var color = localStorage.getItem('doctave-color')
 
@@ -96,12 +96,131 @@
 
             </div>
             <div class='doctave-content'>
-                
+                <p><strong>Producers and Consumers</strong></p>
+<p><strong>Producers</strong>
+Workloads that possess surplus GPU memory available for allocation.</p>
+<p><strong>Consumers</strong>
+Workloads that require additional GPU memory and offload excess data.</p>
+<hr>
+<h2 id="informing-the-coordinator">Informing the Coordinator</h2>
+<p>After identifying producer and consumer GPUs, the coordinator must be notified of the mapping via its REST API. First, start the coordinator and navigate to <a href="http://127.0.0.1:8080/docs">http://127.0.0.1:8080/docs</a> to access the Swagger UI. The <code>/mapping</code> endpoint supports both addition and deletion of producer-consumer pairings. All GPU identifiers supplied to these APIs must correspond to the physical IDs of the GPUs.</p>
+<hr>
+<h2 id="examples">Examples</h2>
+<h3 id="cfs-consumer">CFS Consumer</h3>
+<p>In this scenario, GPUs 2 and 3 serve as consumers, while GPUs 0 and 1 act as producers. The following JSON payloads register these mappings with the coordinator:</p>
+<pre><code class="language-json">{ "producer": 0, "consumer": 2 }
+</code></pre>
+<pre><code class="language-json">{ "producer": 1, "consumer": 3 }
+</code></pre>
+<p>The vLLM server with CFS can be launched using:</p>
+<pre><code class="language-bash">CUDA_VISIBLE_DEVICES=2,3,0,1 \
+python3 -m vllm.entrypoints.openai.api_server \
+  --model meta-llama/Meta-Llama-3.1-70B-Instruct \
+  --tensor-parallel-size 2 \
+  --swap-space 20 \
+  --disable-log-requests \
+  --enforce-eager \
+  --enable-chunked-prefill \
+  --max-num-batched-tokens 512 \
+  --max-num-seqs 512 \
+  --disable-sliding-window \
+  --load-format dummy \
+  --gpu-memory-utilization 0.9 \
+  --max-model-len 4096 \
+  --enable-cfs \
+  --enable-aqua-swap \
+  --port 9000
+</code></pre>
+<p>The benchmark script can be executed as follows (located in the <code>benchmarks</code> directory of vLLM):</p>
+<pre><code class="language-bash">python3 benchmark_cfs.py \
+  --backend openai \
+  --model meta-llama/Meta-Llama-3.1-70B-Instruct \
+  --request-rate 0.25 \
+  --num-prompts 100 \
+  --dataset-name dummy \
+  --long-prompts 0 \
+  --long-prompt-len 32000 \
+  --port 9000
+</code></pre>
+<p>Note that <code>CUDA_VISIBLE_DEVICES=2,3,0,1</code> exposes GPUs 0 and 1—configured as producers—alongside the tensor-parallel consumers on GPUs 2 and 3. Producer servers are started with:</p>
+<pre><code class="language-bash">CUDA_VISIBLE_DEVICES=0 \
+python3 -m vllm.entrypoints.openai.api_server \
+  --model meta-llama/Meta-Llama-3.1-8B-Instruct \
+  --tensor-parallel-size 1 \
+  --swap-space 32 \
+  --disable-log-requests \
+  --enforce-eager \
+  --enable-chunked-prefill \
+  --max-num-batched-tokens 512 \
+  --max-num-seqs 512 \
+  --disable-sliding-window \
+  --load-format dummy \
+  --gpu-memory-utilization 0.9 \
+  --max-model-len 64000 \
+  --be-producer \
+  --producer-req-gb 30 \
+  --port 9001
+</code></pre>
+<pre><code class="language-bash">CUDA_VISIBLE_DEVICES=1 \
+python3 -m vllm.entrypoints.openai.api_server \
+  --model meta-llama/Meta-Llama-3.1-8B-Instruct \
+  --tensor-parallel-size 1 \
+  --swap-space 32 \
+  --disable-log-requests \
+  --enforce-eager \
+  --enable-chunked-prefill \
+  --max-num-batched-tokens 512 \
+  --max-num-seqs 512 \
+  --disable-sliding-window \
+  --load-format dummy \
+  --gpu-memory-utilization 0.9 \
+  --max-model-len 64000 \
+  --be-producer \
+  --producer-req-gb 30 \
+  --port 9002
+</code></pre>
+<hr>
+<h3 id="flexgen-as-consumer">FlexGen as Consumer</h3>
+<p>To run FlexGen on GPU 1 as a consumer and Stable Diffusion on GPU 0 as producer, restart the coordinator and reconfigure the mappings via the <code>/mapping</code> API. After cloning the FlexGen repository with Aqua support (<code>https://github.com/aquaml/flexgen</code>), execute:</p>
+<pre><code class="language-bash">CUDA_VISIBLE_DEVICES=1,0 numactl --membind=0 \
+python3 -m flexgen.flex_opt \
+  --model facebook/opt-30b \
+  --path _DUMMY_ \
+  --prompt-len 8192 \
+  --gen-len 64 \
+  --percent 100 0 50 50 100 0 \
+  --gpu-batch-size 1 \
+  --num-gpu-batches 1
+</code></pre>
+<p>A vision-model producer can be launched on GPUs 0 using the Aqua vision code (<code>https://github.com/aquaml/vision</code>), after installing <code>diffusers</code>:</p>
+<pre><code class="language-bash">CUDA_VISIBLE_DEVICES=0 \
+python3 -m generate.py \
+  -m sd \
+  -d 10 \
+  -b 16
+</code></pre>
+
             </div>
             <div class='sidebar-right'>
                 <div class='page-nav' id='page-nav'>
                     <p class='page-nav-header'>On this page</p>
                     <ul>
+                        
+                        <li class='page-nav-level-2'>
+                            <a href='#informing-the-coordinator'>Informing the Coordinator</a>
+                        </li>
+                        
+                        <li class='page-nav-level-2'>
+                            <a href='#examples'>Examples</a>
+                        </li>
+                        
+                        <li class='page-nav-level-3'>
+                            <a href='#cfs-consumer'>CFS Consumer</a>
+                        </li>
+                        
+                        <li class='page-nav-level-3'>
+                            <a href='#flexgen-as-consumer'>FlexGen as Consumer</a>
+                        </li>
                         
                     </ul>
                 </div>
@@ -122,11 +241,11 @@
             </div>
         </div>
     </div>
-    <script type="text/javascript" src="/assets/katex.js?v=1749249849"></script>
-    <script type="text/javascript" src="/assets/mermaid.js?v=1749249849"></script>
-    <script type="text/javascript" src="/assets/elasticlunr.js?v=1749249849"></script>
-    <script type="text/javascript" src="/assets/prism.js?v=1749249849"></script>
-    <script type="text/javascript" src="/assets/doctave-app.js?v=1749249849"></script>
+    <script type="text/javascript" src="/assets/katex.js?v=1749277552"></script>
+    <script type="text/javascript" src="/assets/mermaid.js?v=1749277552"></script>
+    <script type="text/javascript" src="/assets/elasticlunr.js?v=1749277552"></script>
+    <script type="text/javascript" src="/assets/prism.js?v=1749277552"></script>
+    <script type="text/javascript" src="/assets/doctave-app.js?v=1749277552"></script>
 
     
     <script type='text/javascript' src="/assets/livereload.js?port=35729" async="" defer=""></script>
